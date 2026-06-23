@@ -1387,14 +1387,24 @@
 
       // 配置暗号：在这里修改你设置的公众号暗号
       const DOWNLOAD_CODE = "bobostudio-shell";
+      const STORAGE_KEY = "boboshell_download_code";
+
+      function revealDownload() {
+        downloadHeader.style.display = "none";
+        qrSection.style.display = "none";
+        downloadUnlocked.classList.add("active");
+        downloadReveal.classList.add("active");
+      }
 
       function checkCode() {
         const value = codeInput.value.trim().toLowerCase();
         if (value === DOWNLOAD_CODE) {
-          downloadHeader.style.display = "none";
-          qrSection.style.display = "none";
-          downloadUnlocked.classList.add("active");
-          downloadReveal.classList.add("active");
+          try {
+            localStorage.setItem(STORAGE_KEY, value);
+          } catch (e) {
+            console.warn("Failed to save download code to localStorage:", e);
+          }
+          revealDownload();
         } else {
           codeError.classList.add("active");
           codeInput.style.borderColor = "var(--danger)";
@@ -1413,6 +1423,19 @@
         codeError.classList.remove("active");
         codeInput.style.borderColor = "";
       });
+
+      // 页面加载时：如果本地缓存了正确的暗号，自动解锁下载
+      (function restoreUnlockedState() {
+        try {
+          const savedCode = localStorage.getItem(STORAGE_KEY);
+          if (savedCode && savedCode.toLowerCase() === DOWNLOAD_CODE) {
+            codeInput.value = savedCode;
+            revealDownload();
+          }
+        } catch (e) {
+          console.warn("Failed to read download code from localStorage:", e);
+        }
+      })();
 
       // 动态获取最新 Release 的 exe 下载地址
       const downloadLink = document.getElementById("downloadLink");
